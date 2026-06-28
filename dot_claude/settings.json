@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash",
+      "Read",
+      "Edit",
+      "Write"
+    ],
+    "additionalDirectories": [
+      "/home/marcin/claude"
+    ]
+  },
+  "model": "sonnet",
+  "statusLine": {
+    "type": "command",
+    "command": "bash /home/marcin/.claude/statusline.sh"
+  },
+  "effortLevel": "high",
+  "theme": "custom:tokyonight",
+  "editorMode": "normal"
+}

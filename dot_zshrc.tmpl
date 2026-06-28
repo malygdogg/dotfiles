@@ -1,0 +1,92 @@
+{{- $isWSL := contains "microsoft" .chezmoi.kernel.osrelease -}}
+{{- $fd := "fd" -}}
+{{- $bat := "bat" -}}
+{{- if $isWSL -}}
+{{- $fd = "fdfind" -}}
+{{- $bat = "batcat" -}}
+{{- end -}}
+# Lines configured by zsh-newuser-install
+HISTFILE=~/.histfile
+HISTSIZE=10000
+SAVEHIST=10000
+setopt autocd extendedglob
+bindkey -v
+# End of lines configured by zsh-newuser-install
+# The following lines were added by compinstall
+zstyle :compinstall filename '/home/marcin/.zshrc'
+
+autoload -Uz compinit
+compinit
+# End of lines added by compinstall
+
+export PATH="$HOME/.local/bin:$PATH"
+export COLORTERM=truecolor
+export LS_COLORS="$LS_COLORS:di=1;94:ow=1;94;48;2;61;89;161:tw=1;94;48;2;61;89;161"
+export FZF_DEFAULT_OPTS="
+  --color=fg:#a9b1d6,bg:#1a1b26,hl:#ff9e64,fg+:#c0caf5,bg+:#283457,hl+:#ff9e64
+  --color=info:#7aa2f7,prompt:#7dcfff,pointer:#7dcfff,marker:#9ece6a,spinner:#9ece6a,header:#9ece6a,border:#3b4261
+  --prompt 'Files hidden nogit>'
+  --header 'alt-h: toggle hidden | alt-i: toggle .git'
+  --bind 'alt-h:transform:
+    cmd=\"{{ $fd }} --type f --strip-cwd-prefix --exclude .git --exclude .venv\"
+    [[ \$FZF_PROMPT =~ hidden ]] || cmd=\"\$cmd --hidden\"
+    [[ \$FZF_PROMPT =~ nogit ]] && cmd=\"\$cmd --no-ignore\"
+    prompt=\"Files\"
+    [[ \$FZF_PROMPT =~ hidden ]] || prompt=\"\$prompt hidden\"
+    [[ \$FZF_PROMPT =~ nogit ]] && prompt=\"\$prompt nogit\"
+    echo \"CMD: $cmd\" > /tmp/fzf_debug.txt; echo \"change-prompt(\$prompt> )+reload(\$cmd)\"'
+  --bind 'alt-i:transform:
+    cmd=\"{{ $fd }} --type f --strip-cwd-prefix --exclude .git --exclude .venv\"
+    [[ \$FZF_PROMPT =~ hidden ]] && cmd=\"\$cmd --hidden\"
+    [[ \$FZF_PROMPT =~ nogit ]] || cmd=\"\$cmd --no-ignore\"
+    prompt=\"Files\"
+    [[ \$FZF_PROMPT =~ hidden ]] && prompt=\"\$prompt hidden\"
+    [[ \$FZF_PROMPT =~ nogit ]] || prompt=\"\$prompt nogit\"
+    echo \"CMD: $cmd\" > /tmp/fzf_debug.txt; echo \"change-prompt(\$prompt> )+reload(\$cmd)\"'
+  "
+export FZF_CTRL_T_OPTS="
+  --preview '{{ $bat }} -n --color=always {}'
+  --bind 'ctrl-/:change-preview-window(right|down|left|up|hidden)'
+  --popup center
+  "
+export FZF_ALT_C_OPTS="
+  --preview 'tree -C {}'
+  "
+export FZF_DEFAULT_COMMAND="{{ $fd }} --type f --strip-cwd-prefix --hidden --no-ignore --exclude .git --exclude .venv"
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+
+{{ if $isWSL -}}
+alias fd=fdfind
+alias bat=batcat
+{{ end -}}
+alias ll='ls -alF'
+alias la='ls -A'
+alias l='ls -CF'
+alias ls='ls --color=auto'
+alias grep='grep --color=auto'
+alias fzp="fzf --preview '{{ $bat }} --color=always {}' --preview-window '~3' --popup center"
+
+function y() {
+  local tmp="$(mktemp -t "yazi-cwd.XXXXXX")"
+  yazi "$@" --cwd-file="$tmp"
+  if cwd="$(command cat -- "$tmp")" && [ -n "$cwd" ] && [ "$cwd" != "$PWD" ]; then
+    builtin cd -- "$cwd"
+  fi
+  rm -f -- "$tmp"
+}
+
+export ZSH="$HOME/.oh-my-zsh"
+
+ZSH_THEME=""
+
+plugins=(git zsh-autosuggestions zsh-syntax-highlighting)
+
+source $ZSH/oh-my-zsh.sh
+
+bindkey '^ ' autosuggest-accept
+
+eval "$(starship init zsh)"
+
+[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
